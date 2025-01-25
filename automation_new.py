@@ -302,7 +302,7 @@ if user_input:
                     )
                 elif platform == "Zoom":
                      token = zoom_get_access_token()
-                      try:
+                     try:
                          # Try to split the display name into first and last names
                          first_name, last_name = user_data["display_name"].split()
                      except ValueError:
