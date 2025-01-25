@@ -237,43 +237,51 @@ if user_input:
             st.write(reply)
 
     elif st.session_state.step == "collect_info":
-    input_parts = [part.strip() for part in user_input.split(",")]
+    # Split by commas and trim whitespace
+       input_parts = [part.strip() for part in user_input.split(",")]
+   
+       if st.session_state.action == "Onboard":
+           # Validate there are exactly 4 parts
+           if len(input_parts) == 4:
+               email, display_name, job_title, phone_number = input_parts
+   
+               # Validate email
+               if "@" not in email or "." not in email:
+                   reply = "Invalid email format. Please enter a valid email address."
+               # Validate phone number
+               elif not phone_number.isdigit():
+                   reply = "Invalid phone number. Please provide a numeric phone number."
+               else:
+                   # Save user data if all validations pass
+                   st.session_state.user_data = {
+                       "email": email,
+                       "display_name": display_name,
+                       "job_title": job_title,
+                       "phone_number": phone_number
+                   }
+                   reply = f"Collected: {st.session_state.user_data}. Type 'submit' to confirm."
+                   st.session_state.step = "submit"
+           else:
+               # If the input format is incorrect
+               reply = (
+                   "Invalid input. Please provide details in this format: "
+                   "'email, display_name, job_title, phone_number'."
+               )
+   
+       elif st.session_state.action == "Offboard":
+           # Validate there is exactly 1 part for offboarding
+           if len(input_parts) == 1:
+               st.session_state.user_data = {"user_id": input_parts[0]}
+               reply = f"Collected: {st.session_state.user_data}. Type 'submit' to confirm."
+               st.session_state.step = "submit"
+           else:
+               reply = "Invalid input. Please provide only the user ID to offboard."
+   
+       # Append the reply and display
+       st.session_state.messages.append({"role": "assistant", "content": reply})
+       with st.chat_message("assistant"):
+           st.write(reply)
 
-    if st.session_state.action == "Onboard":
-        if len(input_parts) != 4:
-            reply = (
-                "Invalid input. Please provide the details in the format: "
-                "'email, display_name, job_title, phone_number'."
-            )
-        else:
-            email, display_name, job_title, phone_number = input_parts
-            # Validate each field
-            if "@" not in email or "." not in email:
-                reply = "Invalid email format. Please enter a valid email address."
-            elif not phone_number.isdigit() or len(phone_number) < 7:
-                reply = "Invalid phone number. Please enter a numeric phone number with at least 7 digits."
-            else:
-                # Data is valid, save it
-                st.session_state.user_data = {
-                    "email": email,
-                    "display_name": display_name,
-                    "job_title": job_title,
-                    "phone_number": phone_number
-                }
-                reply = f"Collected: {st.session_state.user_data}. Type 'submit' to confirm."
-                st.session_state.step = "submit"
-
-    elif st.session_state.action == "Offboard":
-        if len(input_parts) != 1:
-            reply = "Invalid input. Please provide only the user ID to offboard."
-        else:
-            st.session_state.user_data = {"user_id": input_parts[0]}
-            reply = f"Collected: {st.session_state.user_data}. Type 'submit' to confirm."
-            st.session_state.step = "submit"
-
-    st.session_state.messages.append({"role": "assistant", "content": reply})
-    with st.chat_message("assistant"):
-        st.write(reply)
 
     elif st.session_state.step == "submit":
         if "submit" in user_input.lower():
