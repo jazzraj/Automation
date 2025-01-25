@@ -301,14 +301,10 @@ if user_input:
                         user_data["job_title"], user_data["phone_number"]
                     )
                 elif platform == "Zoom":
-                     token = zoom_get_access_token()
-                     try:
+                    token = zoom_get_access_token()
+                     
                          # Try to split the display name into first and last names
-                         first_name, last_name = user_data["display_name"].split()
-                     except ValueError:
-                         # If there’s no space in the display name, use the whole name as first name
-                         first_name = user_data["display_name"]
-                         last_name = ""  # Leave last name empty
+                    first_name, last_name = user_data["display_name"].split()
                     reply = zoom_create_user(
                         token, user_data["email"], first_name, last_name
                     )
