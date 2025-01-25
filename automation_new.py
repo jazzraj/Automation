@@ -91,6 +91,8 @@ def okta_create_user(email, display_name, job_title=None, phone_number=None):
             "firstName": first_name,
             "lastName": last_name,
             "email": email,
+            "login": email,
+
            
         },
         "credentials": {
