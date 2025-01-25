@@ -1,0 +1,5 @@
+openai
+textract
+streamlit
+requests
+jwt
