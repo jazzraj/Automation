@@ -90,22 +90,41 @@ def o365_delete_user(access_token, user_id):
         return None
 
 # ----- New Function: Disable Microsoft 365 User Instead of Deletion -----
-def o365_disable_user(access_token, user_id):
-    url = f"https://graph.microsoft.com/v1.0/users/{user_id}"
-    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+def o365_disable_user(access_token, user_principal_name):
+    """
+    Disable a user in Microsoft 365 by setting `accountEnabled` to False
+    using the User Principal Name (UPN).
+    """
+    # Step 1: Get the user ID from the UPN
+    url_get_user = f"https://graph.microsoft.com/v1.0/users/{user_principal_name}"
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    response = requests.get(url_get_user, headers=headers)
+    if response.status_code == 200:
+        user_data = response.json()
+        user_id = user_data.get("id")  # Extracting user ID
+    else:
+        show_error("Microsoft 365", "Fetch User ID", response.text)
+        return None
+
+    # Step 2: Disable the user
+    url_disable_user = f"https://graph.microsoft.com/v1.0/users/{user_id}"
+    headers["Content-Type"] = "application/json"
     payload = {
         "accountEnabled": False,
         "passwordProfile": {
             "forceChangePasswordNextSignIn": True,
-            "password": "TempP@ss1234"  # New temporary password
+            "password": "TempP@ss1234"
         }
     }
-    response = requests.patch(url, json=payload, headers=headers)
+
+    response = requests.patch(url_disable_user, json=payload, headers=headers)
     if response.status_code in [200, 204]:
-        return "User disabled successfully in Microsoft 365 and password updated."
+        return f"User {user_principal_name} disabled successfully in Microsoft 365."
     else:
         show_error("Microsoft 365", "Disable User", response.text)
         return None
+
 
 # ===================== OKTA Functions =====================
 def okta_create_user(email, display_name, job_title=None, phone_number=None):
