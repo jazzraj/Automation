@@ -47,11 +47,14 @@ def o365_get_access_token():
         "client_secret": O365_CLIENT_SECRET,
         "scope": "https://graph.microsoft.com/.default"
     }
-    response = requests.post(url, data=data)
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    
+    response = requests.post(url, data=data, headers=headers)
+    
     if response.status_code == 200:
         return response.json().get("access_token")
     else:
-        show_error("Microsoft 365", "Get Access Token", response.text)
+        st.error(f"Error getting token: {response.text}")
         return None
 
 def o365_create_user(access_token, email, display_name, job_title=None, phone_number=None):
@@ -92,10 +95,10 @@ def o365_delete_user(access_token, user_id):
 # ----- New Function: Disable Microsoft 365 User Instead of Deletion -----
 def o365_disable_user(access_token, user_principal_name):
     """
-    Disable a user in Microsoft 365 by setting `accountEnabled` to False
-    using the User Principal Name (UPN).
+    Disables a Microsoft 365 user account by setting accountEnabled = False.
+    Uses UPN (email) to retrieve the user ID first.
     """
-    # Step 1: Get the user ID from the UPN
+    # Step 1: Get User ID from UPN
     url_get_user = f"https://graph.microsoft.com/v1.0/users/{user_principal_name}"
     headers = {"Authorization": f"Bearer {access_token}"}
 
@@ -104,19 +107,22 @@ def o365_disable_user(access_token, user_principal_name):
         user_data = response.json()
         user_id = user_data.get("id")  # Extracting user ID
     else:
-        show_error("Microsoft 365", "Fetch User ID", response.text)
+        st.error(f"Error fetching user ID: {response.text}")
         return None
 
-    # Step 2: Disable the user
+    # Step 2: Disable the User
     url_disable_user = f"https://graph.microsoft.com/v1.0/users/{user_id}"
     headers["Content-Type"] = "application/json"
-    payload = {
-        "accountEnabled": False,
-        "passwordProfile": {
-            "forceChangePasswordNextSignIn": True,
-            "password": "TempP@ss1234"
-        }
-    }
+    payload = {"accountEnabled": False}
+
+    response = requests.patch(url_disable_user, json=payload, headers=headers)
+
+    if response.status_code in [200, 204]:
+        return f"User {user_principal_name} disabled successfully."
+    else:
+        st.error(f"Error disabling user: {response.text}")
+        return None
+
 
     response = requests.patch(url_disable_user, json=payload, headers=headers)
     if response.status_code in [200, 204]:
